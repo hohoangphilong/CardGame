@@ -52,7 +52,7 @@ public class MainController implements GameConstants {
             if (!game.checkGameOver()) {
                 if (!game.check(game.getPlayers()[i], cardPointerCard)) {
                     drawNewCard();
-                }else{
+                } else {
                     getThisCard(cardPointerCard);
                 }
 
@@ -63,14 +63,25 @@ public class MainController implements GameConstants {
             }
         }
         if (game.checkGameOver()) {
-            JOptionPane.showMessageDialog(mainPanel, "Game over", "Message", JOptionPane.OK_OPTION);
-
+            game.showAllCards();
+            mainPanel.updatePanel();
+            Player p = game.isWinner();
+            JOptionPane.showMessageDialog(mainPanel, "Game over, "
+                    + p.getPlayerName() + " is win with score "
+                    + p.getScore(), "Message", JOptionPane.OK_OPTION);
+            System.exit(0);
         }
     }
 
     public void getThisCard(Card clickedCard) {
         if (game.checkGameOver()) {
-            JOptionPane.showMessageDialog(mainPanel, "Game over", "Message", JOptionPane.OK_OPTION);
+            game.showAllCards();
+            mainPanel.updatePanel();
+            Player p = game.isWinner();
+            JOptionPane.showMessageDialog(mainPanel, "Game over, "
+                    + p.getPlayerName() + " is win with score "
+                    + p.getScore(), "Message", JOptionPane.OK_OPTION);
+            System.exit(0);
         } else {
             clickedCard.removeMouseListener(CARDLISTENER);
             game.getCard(clickedCard);
