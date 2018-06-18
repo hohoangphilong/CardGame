@@ -19,7 +19,7 @@ public class MainController implements GameConstants {
 
     private Game game;
     private TablePanel mainPanel;
-    private Card cardPointerCard;//save card which just have been played
+    private Card cardPointerCard;
 
     public MainController() {
         game = new Game();

@@ -29,7 +29,7 @@ public class Card extends JPanel implements CardConstants, ICard {
 
     private int cardRank;
     private int cardSuit;
-    private boolean cardState = false;//false means face down - true means face up
+    private boolean cardState = false;
     private boolean isPlayedCard = false;
     private BufferedImage image;
 
