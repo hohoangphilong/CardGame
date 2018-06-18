@@ -10,6 +10,7 @@ package GameComponents;
  * @author H2PL
  */
 import Interfaces.CardConstants;
+import static Interfaces.GameConstants.CARDLISTENER;
 import Interfaces.ICard;
 
 import java.awt.Color;
@@ -42,6 +43,18 @@ public class Card extends JPanel implements CardConstants, ICard {
         this.setPreferredSize(CARD_SIZE);
         this.setBorder(defaultBorder);
         this.addMouseListener(new MouseHandler());
+    }
+    
+    public Card(Card card){
+        this.cardRank = card.cardRank;
+        this.cardSuit = card.cardSuit;
+        this.cardState = card.cardState;
+        this.isPlayedCard = card.isPlayedCard;
+
+        this.setPreferredSize(CARD_SIZE);
+        this.setBorder(defaultBorder);
+        this.addMouseListener(new MouseHandler());
+        this.addMouseListener(CARDLISTENER);
     }
 
     
@@ -109,4 +122,5 @@ public class Card extends JPanel implements CardConstants, ICard {
     public int getSuit() {
         return this.cardSuit;
     }
+    
 }

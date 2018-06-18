@@ -10,19 +10,19 @@ package Controller;
  * @author H2PL
  */
 import Interfaces.GameConstants;
-import GameComponents.*;
 import GameComponents.Card;
 import GameComponents.Dealer;
 import GameComponents.Player;
-import java.awt.Graphics;
 
 import java.util.ArrayList;
-import java.util.Random;
+import java.util.Collections;
 
 public class Game implements GameConstants {
 
     private Player[] players;
     private final Dealer dealer;
+
+    private ArrayList<Integer> tempList;
 
     public Game() {
         Player p1 = new Player("You");
@@ -38,6 +38,8 @@ public class Game implements GameConstants {
         for (Card c : players[0].getAllCards()) {
             c.setState(true);
         }
+
+        tempList = new ArrayList<Integer>();
     }
 
     public Player[] getPlayers() {
@@ -49,18 +51,13 @@ public class Game implements GameConstants {
                 && players[1].getPlayedCards().size() == 4
                 && players[2].getPlayedCards().size() == 4
                 && players[3].getPlayedCards().size() == 4) {
-            return true;
-        } else if (players[0].getNumOfCombos() == 3
-                || players[1].getNumOfCombos() == 3
-                || players[2].getNumOfCombos() == 3
-                || players[3].getNumOfCombos() == 3) {
-            return true;
+            return true;       
         } else {
             return false;
         }
     }
-    
-    public int getRemainingCards(){
+
+    public int getRemainingCards() {
         return dealer.getRemainingCards();
     }
 
@@ -136,41 +133,218 @@ public class Game implements GameConstants {
     }
 
     //not complete, remember to remove mouselistener of before played card
-    public boolean checkFlush() {
-        return true;
-    }
-
-    public boolean checkKind() {
-        return true;
-    }
-    
-    public boolean check(){
+    public boolean check(Player p, Card c) {
+        ArrayList<Card> temp = new ArrayList<>(p.getAllCards());
+        temp.add(c);
+        if (hasKind(temp)) {
+            return true;
+        }
+        if (hasFlush(temp)) {
+            return true;
+        }
         return false;
     }
 
-    public void sort() {
-        //main sort method
+    private int[] flushPos;
+    private int[] kindPos;
+    private int numCardsInCombos, countCombos;
+
+    public void sort(Player p) {
+        numCardsInCombos = 0;
+        countCombos = 0;
+        p.setAllCards(split(p.getAllCards()));
+        p.setNumOfCombos(countCombos);
+        int score = 0;
+        for (int i = numCardsInCombos; i < p.getTotalCards(); i++) {
+            score += p.getAllCards().get(i).getRank();
+        }
+        p.setScore(score);
+    }
+
+    private ArrayList<Card> sortRank(ArrayList<Card> list) {
+        ArrayList<Card> newList = new ArrayList<>(list);
+        Collections.sort(newList, (Card o1, Card o2) -> o2.getRank() - o1.getRank());
+        return newList;
+    }
+
+    private ArrayList<Card> sortSuit(ArrayList<Card> list) {
+        ArrayList<Card> newList = new ArrayList<>(list);
+        Collections.sort(sortRank(newList), (Card o1, Card o2) -> o2.getSuit() - o1.getSuit());
+        return newList;
+    }
+
+    private ArrayList<Card> split(ArrayList<Card> list) {
+        ArrayList<Card> temp = new ArrayList<>();
+        ArrayList<Card> clone = new ArrayList<>(list);
+        
+        if (hasKind(clone)) {
+            if (hasFlush(clone)) {
+                if (isConflict(clone)) {
+                    ArrayList<Card> listKind = sortRank(clone);
+                    int m = calculate(listKind, kindPos);
+                    ArrayList<Card> listFlush = sortSuit(clone);
+                    int n = calculate(listFlush, flushPos);
+
+                    if (m < n) {
+                        for (int i = 0; i < flushPos.length; i++) {
+                            Card c = new Card(clone.get(flushPos[i]));
+                            temp.add(c);
+                        }
+                        for (int i = 0; i < flushPos.length; i++) {
+                            clone.remove(clone.get(flushPos[i] - i));
+                        }
+                        temp = sortRank(temp);
+                        countCombos++;
+                        numCardsInCombos += flushPos.length;
+                        return append(temp, split(clone));
+                    } else {
+                        temp = sortRank(temp);
+                        for (int i = 0; i < kindPos.length; i++) {
+                            Card c = new Card(clone.get(kindPos[i]));
+                            temp.add(c);
+                        }
+                        for (int i = 0; i < kindPos.length; i++) {
+                            clone.remove(clone.get(kindPos[i] - i));
+                        }
+                        countCombos++;
+                        numCardsInCombos += kindPos.length;
+                        return append(temp, split(clone));
+                    }
+                } else {
+                    for (int i = 0; i < flushPos.length; i++) {
+                        Card c = new Card(clone.get(flushPos[i]));
+                        temp.add(c);
+                    }
+                    for (int i = 0; i < flushPos.length; i++) {
+                        clone.remove(clone.get(flushPos[i] - i));
+                    }
+                    temp = sortRank(temp);
+                    countCombos++;
+                    numCardsInCombos += flushPos.length;
+                    return append(temp, split(clone));
+                }
+            } else {
+                temp = sortRank(temp);
+                for (int i = 0; i < kindPos.length; i++) {
+                    Card c = new Card(clone.get(kindPos[i]));
+                    temp.add(c);
+                }
+                for (int i = 0; i < kindPos.length; i++) {
+                    clone.remove(clone.get(kindPos[i] - i));
+                }
+                countCombos++;
+                numCardsInCombos += kindPos.length;
+                return append(temp, split(clone));
+            }
+        } else {
+            if (hasFlush(clone)) {
+                for (int i = 0; i < flushPos.length; i++) {
+                    Card c = new Card(clone.get(flushPos[i]));
+                    temp.add(c);
+                }
+                for (int i = 0; i < flushPos.length; i++) {
+                    clone.remove(list.get(flushPos[i] - i));
+                  
+                }
+                temp = sortRank(temp);
+                countCombos++;
+                numCardsInCombos += flushPos.length;
+                return append(temp, split(clone));
+            } else {
+                clone = sortRank(clone);
+                return clone;
+            }
+        }
+    }
+
+    private ArrayList<Card> append(ArrayList<Card> src, ArrayList<Card> dst) {
+        dst.forEach((c) -> {
+            Card card = new Card(c);
+            src.add(card);//check if not point correctly
+        });
+        return src;
+    }
+
+    private int calculate(ArrayList<Card> list, int[] pos) {
+        int sum = 0;
+        for (int i = 0; i < pos.length; i++) {
+            sum += list.get(pos[i]).getRank();
+        }
+        return sum;
+    }
+
+    private boolean isConflict(ArrayList<Card> list) {
+        for (int i = 0; i < flushPos.length; i++) {
+            ArrayList<Card> list1 = sortSuit(list);            
+            for (int j = 0; j < kindPos.length; j++) {
+                ArrayList<Card> list2 =  sortRank(list);
+                if (list1.get(i).getRank() == list2.get(j).getRank() && list1.get(i).getSuit() == list2.get(j).getSuit()) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean hasFlush(ArrayList<Card> list) {
+        ArrayList<Card> newList = sortSuit(list);
+        for (int i = 0; i < newList.size() - 2; i++) {
+            if (newList.get(i).getSuit() == newList.get(i + 1).getSuit() && newList.get(i).getSuit() == newList.get(i + 2).getSuit()) {
+                if (newList.get(i).getRank() == newList.get(i + 1).getRank() + 1 && newList.get(i).getRank() == newList.get(i + 2).getRank() + 2) {
+                    flushPos = new int[3];
+                    for (int n = 0; n < 3; n++) {
+                        flushPos[n] = i + n;
+                    }
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean hasKind(ArrayList<Card> list) {
+        ArrayList<Card> newList = sortRank(list);
+        for (int i = 0; i < newList.size() - 2; i++) {
+//            if (i < list.size() - 3
+//                    && (list.get(i).getRank() == list.get(i + 1).getRank()
+//                    && list.get(i).getRank() == list.get(i + 2).getRank()
+//                    && list.get(i).getRank() == list.get(i + 3).getRank())) {
+//                kindPos = new int[4];
+//                for (int n = 0; n < 4; n++) {
+//                    kindPos[n] = i + n;
+//                }
+//                return true;
+//            } else 
+            if (newList.get(i).getRank() == newList.get(i + 1).getRank() && newList.get(i).getRank() == newList.get(i + 2).getRank()) {
+                kindPos = new int[3];
+                for (int n = 0; n < 3; n++) {
+                    kindPos[n] = i + n;
+                }
+                return true;
+            }
+        }
+        return false;
     }
 
     private void switchPlayedCard() {
-        ArrayList<Card> list0, list1, list2, list3; 
+        ArrayList<Card> list0, list1, list2, list3;
         list0 = new ArrayList<Card>(players[0].getPlayedCards());
         list1 = new ArrayList<Card>(players[1].getPlayedCards());
         list2 = new ArrayList<Card>(players[2].getPlayedCards());
         list3 = new ArrayList<Card>(players[3].getPlayedCards());
         int floor = Math.min(list0.size(), Math.min(list1.size(), Math.min(list2.size(), list3.size())));
-        
+
         if (list0.size() > floor) {
-            list0.remove(list0.size()-1);
-        }        
+            list0.remove(list0.size() - 1);
+        }
         if (list1.size() > floor) {
-            list1.remove(list1.size()-1);
+            list1.remove(list1.size() - 1);
         }
         if (list2.size() > floor) {
-            list2.remove(list2.size()-1);
+            list2.remove(list2.size() - 1);
         }
         if (list3.size() > floor) {
-            list3.remove(list3.size()-1);
+            list3.remove(list3.size() - 1);
         }
 
         if (players[3].getPlayedCards().size() > floor) {
@@ -185,10 +359,28 @@ public class Game implements GameConstants {
         if (players[2].getPlayedCards().size() > floor) {
             list3.add(players[2].getPlayedCard());
         }
-        
+
         players[0].setPlayedCards(list0);
         players[1].setPlayedCards(list1);
         players[2].setPlayedCards(list2);
         players[3].setPlayedCards(list3);
     }
+
+    public Player isWinner() {
+        int maxScore = (Math.max(Math.max(Math.max(players[0].getScore(), players[1].getScore()), players[2].getScore()), players[3].getScore()));
+        if (players[0].getScore() == maxScore) {
+            return players[0];
+        }
+        if (players[1].getScore() == maxScore) {
+            return players[1];
+        }
+        if (players[2].getScore() == maxScore) {
+            return players[2];
+        }
+        if (players[3].getScore() == maxScore) {
+            return players[3];
+        }
+        return null;
+    }
+
 }

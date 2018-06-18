@@ -391,6 +391,9 @@ public class TablePanel extends JPanel implements GameConstants {
         cardHolder.removeAll();
         int i = 0;
         for (Card card : player.getAllCards()) {
+            if(player != sPlayer){
+                card.removeMouseListener(CARDLISTENER);
+            }
             card.setBounds(p.x, p.y, card.CARD_SIZE.width,
                     card.CARD_SIZE.height);
             cardHolder.add(card, i++);

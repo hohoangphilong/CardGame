@@ -50,7 +50,7 @@ public class MainController implements GameConstants {
 
         for (int i = 1; i < 4; i++) {
             if (!game.checkGameOver()) {
-                if (!game.check()) {//modify it
+                if (!game.check(game.getPlayers()[i], cardPointerCard)) {
                     drawNewCard();
                 }else{
                     getThisCard(cardPointerCard);
@@ -88,13 +88,14 @@ public class MainController implements GameConstants {
 
     public void sortCards() {
         //sort player cards, not bot
+        game.sort(game.getPlayers()[0]);
         mainPanel.updatePanel();
     }
 
     //for bot-playing
     private Card autoPlayCard(Player player) {
         //check, sort and play top card
-        
+        game.sort(player);
         cardPointerCard = player.getAllCards().get(player.getAllCards().size() - 1);
         return cardPointerCard;
     }

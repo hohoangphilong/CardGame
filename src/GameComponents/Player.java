@@ -18,6 +18,7 @@ public class Player implements GameConstants {
     private String playerName;
     private boolean isMyTurn;
     private int numOfCombos;
+    private int score;
     private ArrayList<Card> myPlayedCards;
     private ArrayList<Card> myCards;
 
@@ -38,7 +39,7 @@ public class Player implements GameConstants {
     }
 
     public void getCard(Card playedCard) {
-        myCards.add(0, playedCard);
+        myCards.add(playedCard);
     }
 
     public void removeCard(Card thisCard) {
@@ -71,6 +72,14 @@ public class Player implements GameConstants {
 
     public int getNumOfCombos() {
         return numOfCombos;
+    }
+    
+    public void setScore(int num){
+        score = num;
+    }
+    
+    public int getScore(){
+        return score;
     }
 
     public void addPlayedCard(Card card) {
